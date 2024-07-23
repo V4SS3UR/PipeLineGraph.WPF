@@ -7,7 +7,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Xml.Linq;
 
 namespace PipeLine
 {
@@ -96,6 +95,8 @@ namespace PipeLine
                         Dispatcher.Invoke(() =>
                         {
                             var newNodeItem = new PipeLine_NodeItem(node);
+                            newNodeItem.BaseNode.ColumnChanged += BaseNode_GridPositionChanged;
+                            newNodeItem.BaseNode.RowChanged += BaseNode_GridPositionChanged;
                             pipeLine_NodeItems.Add(newNodeItem);
                         });
                     }
@@ -106,8 +107,20 @@ namespace PipeLine
                     {
                         Dispatcher.Invoke(() =>
                         {
-                            var pipeLine_NodeItem = pipeLine_NodeItems.FirstOrDefault(o => o.BaseNode.Name == node.Name);
+                            var pipeLine_NodeItem = pipeLine_NodeItems.First(o => o.BaseNode.Name == node.Name);
+                            pipeLine_NodeItem.BaseNode.ColumnChanged -= BaseNode_GridPositionChanged;
+                            pipeLine_NodeItem.BaseNode.RowChanged -= BaseNode_GridPositionChanged;
                             pipeLine_NodeItems.Remove(pipeLine_NodeItem);
+                        });
+                    }
+                    break;
+
+                case NotifyCollectionChangedAction.Reset:
+                    foreach (PipeLine_NodeItem nodeItem in pipeLine_NodeItems.ToArray())
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            pipeLine_NodeItems.Remove(nodeItem);
                         });
                     }
                     break;
@@ -116,7 +129,13 @@ namespace PipeLine
             RefreshGrid();
         }
 
-
+        private void BaseNode_GridPositionChanged(Node arg1, int arg2)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                this.RefreshGrid();
+            });
+        }
 
         private ObservableCollection<PipeLine_NodeItem> pipeLine_NodeItems { get; set; }
         private ObservableCollection<PipeLine_Segment> pipeLine_Segments { get; set; }
@@ -159,7 +178,7 @@ namespace PipeLine
                             RemoveNodeItem(nodeItem);                            
                         });
                     }
-                    break;
+                    break;                  
             }
 
             RefreshGrid();
@@ -171,36 +190,37 @@ namespace PipeLine
         private void RefreshGrid()
         {
             //Refresh rows and columns
-            int maxRow = NodeItemSource.Max(o => o.Row);
             this.RowDefinitions.Clear();
-            for (int i = 0; i <= maxRow; i++)
-            {
-                this.RowDefinitions.Add(new RowDefinition());
-            }
-
-            int maxColumn = NodeItemSource.Max(o => o.Column);
             this.ColumnDefinitions.Clear();
-            for (int i = 0; i <= maxColumn; i++)
+
+            if(NodeItemSource != null && NodeItemSource.Any())
             {
-                this.ColumnDefinitions.Add(new ColumnDefinition());
-            }
+                int maxRow = NodeItemSource.Max(o => o.Row);
+                for (int i = 0; i <= maxRow; i++)
+                {
+                    this.RowDefinitions.Add(new RowDefinition());
+                }
+
+                int maxColumn = NodeItemSource.Max(o => o.Column);
+                for (int i = 0; i <= maxColumn; i++)
+                {
+                    this.ColumnDefinitions.Add(new ColumnDefinition());
+                }
+            }            
 
             //Check for new segments
             foreach (var node in NodeItemSource)
-            {
-                var nextNodes = node.NextNodes;
-                if (nextNodes.Any())
+            {                
+                foreach (var nextNode in node.NextNodes)
                 {
-                    foreach (var nextNode in nextNodes)
+                    var segmentName = $"{node.Name}_{nextNode.Name}";
+                    if (!pipeLine_Segments.Any(o => o.Name == segmentName))
                     {
-                        var segmentName = $"{node.Name}_{nextNode.Name}";
-                        if (!pipeLine_Segments.Any(o => o.Name == segmentName))
-                        {
-                            AddSegment(node.Name, nextNode.Name);
-                        }
+                        AddSegment(node.Name, nextNode.Name);
                     }
                 }
             }
+
             //Check for removed segments
             foreach (var segment in pipeLine_Segments.ToArray())
             {
@@ -208,7 +228,13 @@ namespace PipeLine
                 var inputNodeKey = segmentParts[0];
                 var outputNodeKey = segmentParts[1];
 
+                //Check if the nodes still exist
                 if (!NodeItemSource.Any(o => o.Name == inputNodeKey) || !NodeItemSource.Any(o => o.Name == outputNodeKey))
+                {
+                    RemoveSegment(inputNodeKey, outputNodeKey);
+                }
+                //Check if the segment is still valid
+                else if(!NodeItemSource.First(o => o.Name == inputNodeKey).NextNodes.Any(o => o.Name == outputNodeKey))
                 {
                     RemoveSegment(inputNodeKey, outputNodeKey);
                 }
@@ -232,7 +258,7 @@ namespace PipeLine
 
             pipeLine_Segments.Add(newSegment);
 
-            Debug.WriteLine("Added " + newSegment.Name);
+            //Debug.WriteLine("Added " + newSegment.Name);
         }
         private void RemoveSegment(string inputNodeKey, string outputNodeKey)
         {
@@ -243,21 +269,17 @@ namespace PipeLine
                 this.Children.Remove(Segment);
                 DestroyVisualTree(Segment);
 
-                Debug.WriteLine("Removed " + Segment.Name);
+                //Debug.WriteLine("Removed " + Segment.Name);
             }
         }
         private void AddNodeItem(PipeLine_NodeItem nodeItem)
         {
             this.Children.Add(nodeItem);
-
-            Debug.WriteLine("Added " + nodeItem.BaseNode.Name);
         }
         private void RemoveNodeItem(PipeLine_NodeItem nodeItem)
         {
             DestroyVisualTree(nodeItem);
             this.Children.Remove(nodeItem);
-
-            Debug.WriteLine("Removed " + nodeItem.BaseNode.Name);
 
         }
 

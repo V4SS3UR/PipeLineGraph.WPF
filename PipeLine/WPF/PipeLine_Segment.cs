@@ -51,6 +51,8 @@ namespace PipeLine
             get { return _endBezierPoint; }
             set { _endBezierPoint = value; OnPropertyChanged(); }
         }
+        private int stepX;
+        private int stepY;
 
 
         private bool _isActivated; public bool IsActivated
@@ -127,8 +129,14 @@ namespace PipeLine
         //Private Methods
         private void Segment_LayoutUpdated(object sender, EventArgs e)
         {
-            if (this.canvas.Children.Count == 0)
+            var newStepX = OutputNodeItem.BaseNode.Column - InputNodeItem.BaseNode.Column;
+            var newStepY = OutputNodeItem.BaseNode.Row - InputNodeItem.BaseNode.Row;
+
+            if (stepX != newStepX || stepY != newStepY)
             {
+                stepX = newStepX;
+                stepY = newStepY;
+
                 Init();
             }
             else
@@ -250,6 +258,7 @@ namespace PipeLine
                 }
             }
 
+            this.canvas.Children.Clear();
             foreach (Path path in paths)
             {
                 //Stroke

@@ -3,6 +3,8 @@ using PipeLine.Core.WPF;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Windows;
 using System.Windows.Media;
 
 namespace PipeLine
@@ -28,12 +30,22 @@ namespace PipeLine
         private int _row; public int Row
         {
             get { return _row; }
-            set { _row = value; OnPropertyChanged(); }
+            set 
+            { 
+                _row = value; 
+                RowChanged?.Invoke(this, value);
+                OnPropertyChanged(); 
+            }
         }
         private int _column; public int Column
         {
             get { return _column; }
-            set { _column = value; OnPropertyChanged(); }
+            set 
+            { 
+                _column = value; 
+                ColumnChanged?.Invoke(this, value);
+                OnPropertyChanged(); 
+            }
         }
 
 
@@ -84,13 +96,22 @@ namespace PipeLine
 
         public static Node Create(string name, string text, int row, int column, double radius, Brush background, NodeState state)
         {
-            return new Node(name, text, row, column, radius, background, state);
+            Node node = null;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                node = new Node(name, text, row, column, radius, background, state);
+            });
+
+            return node;
         }
 
         public void AddPreviousNode(Node node)
         {
-            this.PreviousNodes.Add(node);
-            node.NextNodes.Add(this);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                this.PreviousNodes.Add(node);
+                node.NextNodes.Add(this);
+            });
         }
         public void AddPreviousNodes(IEnumerable<Node> nodes)
         {
@@ -101,8 +122,11 @@ namespace PipeLine
         }
         public void AddNextNode(Node node)
         {
-            this.NextNodes.Add(node);
-            node.PreviousNodes.Add(this);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                this.NextNodes.Add(node);
+                node.PreviousNodes.Add(this);
+            });
         }
         public void AddNextNodes(IEnumerable<Node> nodes)
         {
@@ -110,6 +134,57 @@ namespace PipeLine
             {
                 AddNextNode(node);
             }
+        }
+
+        public void RemovePreviousNode(Node node)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                this.PreviousNodes.Remove(node);
+                node.NextNodes.Remove(this);
+            });
+        }
+        public void RemovePreviousNodes(IEnumerable<Node> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                RemovePreviousNode(node);
+            }
+        }
+        public void RemovePreviousNodes()
+        {
+           foreach (var node in PreviousNodes.ToArray())
+            {
+                RemovePreviousNode(node);
+            }
+        }
+        public void RemoveNextNode(Node node)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                this.NextNodes.Remove(node);
+                node.PreviousNodes.Remove(this);
+            });
+        }
+        public void RemoveNextNodes(IEnumerable<Node> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                RemoveNextNode(node);
+            }
+        }
+        public void RemoveNextNodes()
+        {
+            foreach (var node in NextNodes.ToArray())
+            {
+                RemoveNextNode(node);
+            }
+        }
+
+        public void MoveTo(int row, int column)
+        {
+            Row = row;
+            Column = column;
         }
 
         public void SetState(NodeState state)

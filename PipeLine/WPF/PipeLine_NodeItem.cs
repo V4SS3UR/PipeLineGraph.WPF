@@ -39,12 +39,28 @@ namespace PipeLine
             this.SetValue(Grid.ColumnProperty, this.baseNode.Column);
             OnStateChange(this.baseNode.State);
 
-            this.baseNode.RowChanged += (node, row) => this.SetValue(Grid.RowProperty, row);
-            this.baseNode.ColumnChanged += (node, column) => this.SetValue(Grid.ColumnProperty, column);
+            this.baseNode.RowChanged += BaseNode_RowChanged;
+            this.baseNode.ColumnChanged += BaseNode_ColumnChanged;
             this.baseNode.StateChanged += (node, state) => OnStateChange(state);            
 
             CreateLayout();
         }
+
+        private void BaseNode_RowChanged(Node arg1, int arg2)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                this.SetValue(Grid.RowProperty, arg2);
+            });
+        }
+        private void BaseNode_ColumnChanged(Node arg1, int arg2)
+        {
+            Application.Current.Dispatcher.Invoke(() => 
+            {
+                this.SetValue(Grid.ColumnProperty, arg2);
+            });
+        }
+
         private void CreateLayout()
         {
             //Init the sub grid for Core and Connectors => °|O|°
@@ -111,10 +127,14 @@ namespace PipeLine
 
         private void OnStateChange(NodeState state)
         {
-            this.coreContent.Children.Clear();
+            this.Dispatcher.Invoke(() =>
+            {
+                this.coreContent.Children.Clear();
+            });
+            
 
-            string sData = null;
-            Brush brush = Brushes.White;
+            string sData = default;
+            Brush brush = default;
 
             switch (state)
             {
@@ -144,58 +164,63 @@ namespace PipeLine
                     break;
             }
 
-            var converter = TypeDescriptor.GetConverter(typeof(Geometry));
-            Path path = new Path()
-            {
-                Stretch = Stretch.Fill,
-                Data = (Geometry)converter.ConvertFrom(sData),
-                Fill = brush,
-                Stroke = Brushes.DarkSlateGray,
-                StrokeThickness = 0,
-                Opacity = 1,
-                Margin = new Thickness(2),
-            };
-            coreContent.Children.Add(path);
+            
 
-            if (state == NodeState.Running)
+            Application.Current.Dispatcher.Invoke(() =>
             {
-                Path animatedPath = new Path()
+                var converter = TypeDescriptor.GetConverter(typeof(Geometry));
+                Path path = new Path()
                 {
                     Stretch = Stretch.Fill,
-                    Data = (Geometry)converter.ConvertFrom(pathData_circleFilled),
+                    Data = (Geometry)converter.ConvertFrom(sData),
                     Fill = brush,
-                    RenderTransformOrigin = new Point(0.5, 0.5),
-                    RenderTransform = new ScaleTransform(0.9, 0.9),
+                    Stroke = Brushes.DarkSlateGray,
+                    StrokeThickness = 0,
+                    Opacity = 1,
+                    Margin = new Thickness(2),
                 };
-                coreContent.Children.Add(animatedPath);
+                coreContent.Children.Add(path);
 
-                DoubleAnimation doubleAnimationX = new DoubleAnimation()
+                if (state == NodeState.Running)
                 {
-                    To = 0,
-                    Duration = new Duration(TimeSpan.FromMilliseconds(500)),
-                    RepeatBehavior = RepeatBehavior.Forever,
-                    AutoReverse = true,
-                    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut }
-                };
-                Storyboard.SetTarget(doubleAnimationX, animatedPath);
-                Storyboard.SetTargetProperty(doubleAnimationX, new PropertyPath("RenderTransform.ScaleX"));
+                    Path animatedPath = new Path()
+                    {
+                        Stretch = Stretch.Fill,
+                        Data = (Geometry)converter.ConvertFrom(pathData_circleFilled),
+                        Fill = brush,
+                        RenderTransformOrigin = new Point(0.5, 0.5),
+                        RenderTransform = new ScaleTransform(0.9, 0.9),
+                    };
+                    coreContent.Children.Add(animatedPath);
 
-                DoubleAnimation doubleAnimationY = new DoubleAnimation()
-                {
-                    To = 0,
-                    Duration = new Duration(TimeSpan.FromMilliseconds(500)),
-                    RepeatBehavior = RepeatBehavior.Forever,
-                    AutoReverse = true,
-                    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut }
-                };
-                Storyboard.SetTarget(doubleAnimationY, animatedPath);
-                Storyboard.SetTargetProperty(doubleAnimationY, new PropertyPath("RenderTransform.ScaleY"));
+                    DoubleAnimation doubleAnimationX = new DoubleAnimation()
+                    {
+                        To = 0,
+                        Duration = new Duration(TimeSpan.FromMilliseconds(500)),
+                        RepeatBehavior = RepeatBehavior.Forever,
+                        AutoReverse = true,
+                        EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut }
+                    };
+                    Storyboard.SetTarget(doubleAnimationX, animatedPath);
+                    Storyboard.SetTargetProperty(doubleAnimationX, new PropertyPath("RenderTransform.ScaleX"));
 
-                Storyboard storyBorad = new Storyboard();
-                storyBorad.Children.Add(doubleAnimationX);
-                storyBorad.Children.Add(doubleAnimationY);
-                storyBorad.Begin();
-            }
+                    DoubleAnimation doubleAnimationY = new DoubleAnimation()
+                    {
+                        To = 0,
+                        Duration = new Duration(TimeSpan.FromMilliseconds(500)),
+                        RepeatBehavior = RepeatBehavior.Forever,
+                        AutoReverse = true,
+                        EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut }
+                    };
+                    Storyboard.SetTarget(doubleAnimationY, animatedPath);
+                    Storyboard.SetTargetProperty(doubleAnimationY, new PropertyPath("RenderTransform.ScaleY"));
+
+                    Storyboard storyBorad = new Storyboard();
+                    storyBorad.Children.Add(doubleAnimationX);
+                    storyBorad.Children.Add(doubleAnimationY);
+                    storyBorad.Begin();
+                }
+            });            
         }
     }
 }

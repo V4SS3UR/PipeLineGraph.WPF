@@ -68,7 +68,7 @@
 
 
                                     <ComboBox Grid.Column="3" ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.NodeStates}" 
-                                          SelectedItem="{Binding State}"/>
+                                              SelectedItem="{Binding State}" Width="80"/>
 
                                     <Button Grid.Column="4" Background="Red" Content="Remove" Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.RemoveNodeCommand}"
                                             CommandParameter="{Binding }" Width="70"/>
@@ -86,11 +86,18 @@
                 <TextBox Text="{Binding Column}"/>
 
                 <Button Content="Add Node" Command="{Binding AddNodeCommand}"/>
+
+                <Button DockPanel.Dock="Top" Content="Process flow" Command="{Binding TestProcessCommand}"/>
+
+                <CheckBox x:Name="Checkbox" Content="Show grids" Foreground="White" VerticalAlignment="Center"/>
             </StackPanel>
 
+            
+
+
             <Border CornerRadius="5" BorderThickness="1" BorderBrush="LightGray">
-                <pipeline:PipeLineGrid TextBlock.Foreground="White" ShowGridLines="True"
-                NodeItemSource="{Binding Nodes}"/>
+                <pipeline:PipeLineGrid TextBlock.Foreground="White" ShowGridLines="{Binding ElementName=Checkbox, Path=IsChecked}"
+                    NodeItemSource="{Binding Nodes}"/>
             </Border>
             
 
