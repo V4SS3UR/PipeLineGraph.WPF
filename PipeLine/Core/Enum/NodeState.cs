@@ -3,9 +3,10 @@
     public enum NodeState
     {
         Default = 0,
-        Validate = 1,
+        Complited = 1,
         Failed = 2,
-        Running = 3,
-        Empty = 4
+        Aborted = 3,
+        Running = 4,
+        Empty = 5,
     }
 }

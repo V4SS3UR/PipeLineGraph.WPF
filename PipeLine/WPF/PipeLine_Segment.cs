@@ -120,7 +120,12 @@ namespace PipeLine
             this.OutputNodeConnector.IsActive = true;
 
             //Canvas
-            canvas = new Canvas() { Background = Brushes.Transparent };
+            canvas = new Canvas() 
+            { 
+                Background = Brushes.Transparent,
+                MaxHeight = 100000,
+                MaxWidth = 100000
+            };
             this.Child = canvas;
 
             this.LayoutUpdated += Segment_LayoutUpdated;
@@ -300,7 +305,12 @@ namespace PipeLine
 
             var pfColl = new PathFigureCollection { pFig };
 
-            return new Path() { Data = new PathGeometry(pfColl) };
+            return new Path() 
+            { 
+                Data = new PathGeometry(pfColl),
+                Stretch = System.Windows.Media.Stretch.None,
+                Style = null,
+            };
         }
         private Path DefineLineSegment(BindingPoint startPoint, BindingPoint endPoint)
         {
@@ -318,7 +328,12 @@ namespace PipeLine
 
             var pfColl = new PathFigureCollection { pFig };
 
-            return new Path() { Data = new PathGeometry(pfColl) };
+            return new Path() 
+            { 
+                Data = new PathGeometry(pfColl),
+                Stretch = System.Windows.Media.Stretch.None,
+                Style = null,
+            };
         }
 
 

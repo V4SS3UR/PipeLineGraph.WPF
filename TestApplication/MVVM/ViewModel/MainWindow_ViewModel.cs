@@ -65,6 +65,8 @@ namespace TestApplication.MVVM.ViewModel
             Nodes.Add(step2Node);
             Nodes.Add(endNode);
 
+            startNode.SetState(NodeState.Empty);
+            step1Node.SetState(NodeState.Aborted);
             startNode.SetState(NodeState.Running);
         }
 
@@ -100,7 +102,7 @@ namespace TestApplication.MVVM.ViewModel
                 //Step 1 Validation
                 step1Node.SetState(NodeState.Running);
                 System.Threading.Thread.Sleep(threadSleepTime);
-                step1Node.SetState(NodeState.Validate);
+                step1Node.SetState(NodeState.Complited);
 
                 //Step 2 Failure
                 step2Node.SetState(NodeState.Running);
@@ -110,12 +112,12 @@ namespace TestApplication.MVVM.ViewModel
                 //Step 2 bis Validation
                 step2BisNode.SetState(NodeState.Running);
                 System.Threading.Thread.Sleep(threadSleepTime);
-                step2BisNode.SetState(NodeState.Validate);
+                step2BisNode.SetState(NodeState.Complited);
 
                 //Step 3 Validation
                 step3Node.SetState(NodeState.Running);
                 System.Threading.Thread.Sleep(threadSleepTime);
-                step3Node.SetState(NodeState.Validate);
+                step3Node.SetState(NodeState.Complited);
             });
         }
         private void TestProcess2()
@@ -140,7 +142,7 @@ namespace TestApplication.MVVM.ViewModel
                 //Step 1
                 step1Node.SetState(NodeState.Running);
                 System.Threading.Thread.Sleep(threadSleepTime);
-                step1Node.SetState(NodeState.Validate);
+                step1Node.SetState(NodeState.Complited);
                                 
                 endNode.RemovePreviousNodes();
                 endNode.MoveTo(0, 3);
@@ -161,7 +163,7 @@ namespace TestApplication.MVVM.ViewModel
                 AddNode(step2BisNode);
                 step2BisNode.SetState(NodeState.Running);
                 System.Threading.Thread.Sleep(threadSleepTime);
-                step2BisNode.SetState(NodeState.Validate);
+                step2BisNode.SetState(NodeState.Complited);
 
                 endNode.RemovePreviousNodes();
                 endNode.MoveTo(0, 4);
@@ -174,7 +176,7 @@ namespace TestApplication.MVVM.ViewModel
                 AddNode(step3Node);
                 step3Node.SetState(NodeState.Running);
                 System.Threading.Thread.Sleep(threadSleepTime);
-                step3Node.SetState(NodeState.Validate);
+                step3Node.SetState(NodeState.Complited);
             });
         }
 

@@ -143,7 +143,7 @@ namespace PipeLine
                     brush = Brushes.LightGray;
                     break;
 
-                case NodeState.Validate:
+                case NodeState.Complited:
                     sData = pathData_checkFilled;
                     brush = Brushes.LightGreen;
                     break;
@@ -151,6 +151,11 @@ namespace PipeLine
                 case NodeState.Failed:
                     sData = pathData_cancelFilled;
                     brush = Brushes.Red;
+                    break;
+
+                case NodeState.Aborted:
+                    sData = pathData_cancelFilled;
+                    brush = Brushes.Gray;
                     break;
 
                 case NodeState.Running:
@@ -174,8 +179,6 @@ namespace PipeLine
                     Stretch = Stretch.Fill,
                     Data = (Geometry)converter.ConvertFrom(sData),
                     Fill = brush,
-                    Stroke = Brushes.DarkSlateGray,
-                    StrokeThickness = 0,
                     Opacity = 1,
                     Margin = new Thickness(2),
                 };

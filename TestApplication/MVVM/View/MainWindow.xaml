@@ -92,15 +92,11 @@
                 <CheckBox x:Name="Checkbox" Content="Show grids" Foreground="White" VerticalAlignment="Center"/>
             </StackPanel>
 
-            
-
-
             <Border CornerRadius="5" BorderThickness="1" BorderBrush="LightGray">
-                <pipeline:PipeLineGrid TextBlock.Foreground="White" ShowGridLines="{Binding ElementName=Checkbox, Path=IsChecked}"
-                    NodeItemSource="{Binding Nodes}"/>
+                <pipeline:PipeLineGrid TextBlock.Foreground="White" 
+                                        ShowGridLines="{Binding ElementName=Checkbox, Path=IsChecked}"
+                                        NodeItemSource="{Binding Nodes}"/>
             </Border>
-            
-
         </DockPanel>    
 
     </Grid>
