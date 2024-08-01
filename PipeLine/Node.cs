@@ -3,9 +3,11 @@ using PipeLine.Core.WPF;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using System.Xml.Linq;
 
 namespace PipeLine
 {
@@ -185,6 +187,33 @@ namespace PipeLine
         {
             Row = row;
             Column = column;
+        }
+        public void Shift(int rowShift, int columnShift, bool shiftNextNodes = false)
+        {
+            List<Node> nodeToShift = new List<Node>();
+
+            Action<Node> getNodes = null;
+            getNodes = (node) =>
+            {
+                if (!nodeToShift.Contains(node))
+                {
+                    nodeToShift.Add(node);
+
+                    if (shiftNextNodes)
+                    {
+                        foreach (var nextNode in node.NextNodes)
+                        {
+                            getNodes(nextNode);
+                        }
+                    }
+                }                
+            };
+            getNodes(this);
+
+            foreach (var nodeToMove in nodeToShift)
+            {
+                nodeToMove.MoveTo(nodeToMove.Row + rowShift, nodeToMove.Column + columnShift);
+            }
         }
 
         public void SetState(NodeState state)

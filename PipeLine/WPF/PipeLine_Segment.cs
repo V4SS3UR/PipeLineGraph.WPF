@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Net;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -32,6 +34,11 @@ namespace PipeLine
             get { return _middlePoint; }
             set { _middlePoint = value; OnPropertyChanged(); }
         }
+        private BindingPoint _middlePoint2; public BindingPoint MiddlePoint2
+        {
+            get { return _middlePoint2; }
+            set { _middlePoint2 = value; OnPropertyChanged(); }
+        }
         private BindingPoint _endPoint; public BindingPoint EndPoint
         {
             get { return _endPoint; }
@@ -51,8 +58,6 @@ namespace PipeLine
             get { return _endBezierPoint; }
             set { _endBezierPoint = value; OnPropertyChanged(); }
         }
-        private int stepX;
-        private int stepY;
 
 
         private bool _isActivated; public bool IsActivated
@@ -61,22 +66,9 @@ namespace PipeLine
             set
             {
                 _isActivated = value;
-
-                var color = ((SolidColorBrush)baseBrush).Color;
-                SolidColorBrush semiTransparentBrush = new SolidColorBrush(color)
-                {
-                    Opacity = 0.4
-                };
-                semiTransparentBrush.Freeze();
-
-                Brush = value ? baseBrush : semiTransparentBrush;
-                Thickness = value ? baseThickness : baseThickness * 0.75;
+                UpdateVisualState(value);
             }
         }
-
-        private Brush baseBrush;
-
-        private double baseThickness;
 
         private Brush _brush; public Brush Brush
         {
@@ -89,60 +81,60 @@ namespace PipeLine
             set { _thickness = value; OnPropertyChanged(); }
         }
 
+
         public string Name { get; set; }
 
-        private Canvas canvas { get; set; }
+        private Canvas _canvas;
+        private Brush _baseBrush;
+        private double _baseThickness;
+        private int _stepX;
+        private int _stepY;
 
 
 
-        public PipeLine_Segment(
-            PipeLine_NodeItem inputNode, 
-            PipeLine_NodeItem outputNode, 
-            Brush brush = default, 
-            double thickness = 8)
-        {
+        public PipeLine_Segment(PipeLine_NodeItem inputNode, PipeLine_NodeItem outputNode, Brush brush = default, double thickness = 8) {
             this.InputNodeItem = inputNode;
             this.OutputNodeItem = outputNode;
 
-            this.InputNodeConnector = inputNode.outputConnector;
-            this.OutputNodeConnector = outputNode.inputConnector;
+            this.InputNodeConnector = inputNode.OutputConnector;
+            this.OutputNodeConnector = outputNode.InputConnector;
 
             this.Name = $"{inputNode.BaseNode.Name}_{outputNode.BaseNode.Name}";
+
+
+            this._baseBrush = brush;
+            this._baseThickness = thickness;
             
-
-            this.baseBrush = brush;
-            this.baseThickness = thickness;
-
-            //Trigger change of brush and thickness
-            this.IsActivated = false;
+            this.IsActivated = false; //Trigger change of brush and thickness
 
             this.InputNodeConnector.IsActive = true;
             this.OutputNodeConnector.IsActive = true;
 
             //Canvas
-            canvas = new Canvas() 
-            { 
+            _canvas = new Canvas()
+            {
                 Background = Brushes.Transparent,
                 MaxHeight = 100000,
                 MaxWidth = 100000
             };
-            this.Child = canvas;
+            this.Child = _canvas;
 
             this.LayoutUpdated += Segment_LayoutUpdated;
         }
 
-        //Private Methods
+
+
         private void Segment_LayoutUpdated(object sender, EventArgs e)
         {
             var newStepX = OutputNodeItem.BaseNode.Column - InputNodeItem.BaseNode.Column;
             var newStepY = OutputNodeItem.BaseNode.Row - InputNodeItem.BaseNode.Row;
 
-            if (stepX != newStepX || stepY != newStepY)
+            if (_stepX != newStepX || _stepY != newStepY)
             {
-                stepX = newStepX;
-                stepY = newStepY;
+                _stepX = newStepX;
+                _stepY = newStepY;
 
-                Init();
+                InitializePath();
             }
             else
             {
@@ -160,127 +152,428 @@ namespace PipeLine
             }
         }
 
-        private void RefreshPoints()
-        {
-            int stepX = OutputNodeItem.BaseNode.Column - InputNodeItem.BaseNode.Column;
-            int stepY = OutputNodeItem.BaseNode.Row - InputNodeItem.BaseNode.Row;
 
-            if (stepY == 0)
-            {
-                //Line Only
-            }
-            else
-            {
-                if (stepX == 1)
-                {
-                    //Bezier Only
-                    this.StartBezierPoint.X = EndPoint.X;
-                    this.StartBezierPoint.Y = StartPoint.Y;
-                    this.EndBezierPoint.X = StartPoint.X;
-                    this.EndBezierPoint.Y = EndPoint.Y;
-                }
-                else
-                {
-                    //Bezier + Line
-                    double dX_connector = InputNodeItem.outputConnector.GetCenterPoint().X - InputNodeItem.inputConnector.GetCenterPoint().X;
-                    double dX = OutputNodeConnector.GetCenterPoint().X - InputNodeConnector.GetCenterPoint().X;
-                    dX -= (stepX - 1) * dX_connector;
-                    dX /= stepX;
 
-                    if (stepY > 0) //Descente, input collée
-                    {
-                        //Bezier
-                        this.MiddlePoint.X = StartPoint.X + dX;
-                        this.MiddlePoint.Y = EndPoint.Y;
-                        this.StartBezierPoint.X = MiddlePoint.X;
-                        this.StartBezierPoint.Y = StartPoint.Y;
-                        this.EndBezierPoint.X = StartPoint.X;
-                        this.EndBezierPoint.Y = MiddlePoint.Y;
-                    }
-                    else //Montée; output collée
-                    {
-                        //Bezier
-                        this.MiddlePoint.X = EndPoint.X - dX;
-                        this.MiddlePoint.Y = StartPoint.Y;
-                        this.StartBezierPoint.X = EndPoint.X;
-                        this.StartBezierPoint.Y = StartPoint.Y;
-                        this.EndBezierPoint.X = MiddlePoint.X;
-                        this.EndBezierPoint.Y = EndPoint.Y;
-                    }
-                }
-            }
-        }
+        //row;column => Path
+        //(stepY; stepX)
 
-        private void Init()
+        //0;-n => elbow + horizontal line + elbow
+        //0;-1 => elbow + horizontal line + elbow
+        //0;+0 => nothing
+        //0;+1 => horizontal line
+        //0;+n => horizontal line
+
+        //-1;-n => vertical bezier
+        //-1;-1 => vertical bezier
+        //-1;+0 => vertical bezier
+        //-1;+1 => horizontal bezier
+        //-1;+n => horizontal line + horizontal bezier
+
+        //+1;-n => vertical bezier
+        //+1;-1 => vertical bezier
+        //+1;+0 => vertical bezier
+        //+1;+1 => horizontal bezier
+        //+1;+n => horizontal line + horizontal bezier
+
+        //-n;-n => vertical bezier + vertical line
+        //-n;-1 => vertical bezier + vertical line
+        //-n;+0 => vertical bezier + vertical line
+        //-n;+1 => horizontal bezier
+        //-n;+n => horizontal line + horizontal bezier
+
+        //+n;-n => vertical bezier + vertical line
+        //+n;-1 => vertical bezier + vertical line
+        //+n;0 => vertical bezier + vertical line
+        //+n;+1 => horizontal bezier
+        //+n;+n => horizontal line + horizontal bezier
+
+
+        private void InitializePath()
         {
             List<Path> paths = new List<Path>();
 
-            int stepX = OutputNodeItem.BaseNode.Column - InputNodeItem.BaseNode.Column;
-            int stepY = OutputNodeItem.BaseNode.Row - InputNodeItem.BaseNode.Row;
+            this.StartPoint = InputNodeConnector.CenterPoint;
+            this.EndPoint = OutputNodeConnector.CenterPoint;
 
-            if (stepY == 0)
+            var elbowOffset = InputNodeItem.BaseNode.Radius / 2 * 1.25;
+
+            if (_stepY == 0 && _stepX < -1)
             {
-                //Line Only
-                this.StartPoint = InputNodeConnector.GetCenterPoint();
-                this.EndPoint = OutputNodeConnector.GetCenterPoint();
+                // Elbow + horizontal line + elbow
+                this.MiddlePoint = new BindingPoint(this.StartPoint.X - elbowOffset, this.StartPoint.Y - elbowOffset);
+                this.MiddlePoint2 = new BindingPoint(this.EndPoint.X + elbowOffset, this.StartPoint.Y - elbowOffset);
+                paths.Add(DefineCurveSegment(this.StartPoint, this.MiddlePoint));
+                paths.Add(DefineLineSegment(this.MiddlePoint, this.MiddlePoint2));
+                paths.Add(DefineCurveSegment(this.MiddlePoint2, this.EndPoint));
+            }
+            else if (_stepY == 0 && _stepX == -1)
+            {
+                // Elbow + horizontal line + elbow
+                this.MiddlePoint = new BindingPoint(this.StartPoint.X - elbowOffset, this.StartPoint.Y - elbowOffset);
+                this.MiddlePoint2 = new BindingPoint(this.EndPoint.X + elbowOffset, this.StartPoint.Y - elbowOffset);
+                paths.Add(DefineCurveSegment(this.StartPoint, this.MiddlePoint));
+                paths.Add(DefineLineSegment(this.MiddlePoint, this.MiddlePoint2));
+                paths.Add(DefineCurveSegment(this.MiddlePoint2, this.EndPoint));
+            }
+            else if(_stepY == 0 && _stepX == 0)
+            {
+                // Nothing
+            }
+            else if (_stepY == 0 && _stepX == 1)
+            {
+                // Horizontal line
                 paths.Add(DefineLineSegment(this.StartPoint, this.EndPoint));
             }
-            else
+            else if (_stepY == 0 && _stepX > 1)
             {
-                if (stepX == 1)
-                {
-                    //Bezier Only
-                    this.StartPoint = InputNodeConnector.GetCenterPoint();
-                    this.EndPoint = OutputNodeConnector.GetCenterPoint();
-                    paths.Add(DefineBezierSegment(this.StartPoint, this.EndPoint));
-                }
-                else
-                {
-                    //Bezier + Line
-                    double dX_connector = (InputNodeItem.outputConnector.GetCenterPoint().X - InputNodeItem.inputConnector.GetCenterPoint().X) / 2;
-                    double dX = OutputNodeConnector.GetCenterPoint().X - InputNodeConnector.GetCenterPoint().X;
-                    dX -= (stepX - 1) * dX_connector;
-                    dX /= stepX;
-
-                    if (stepY > 0) //Descente, input collée
-                    {
-                        this.StartPoint = InputNodeConnector.GetCenterPoint();
-                        this.EndPoint = OutputNodeConnector.GetCenterPoint();
-                        this.MiddlePoint = new BindingPoint(this.StartPoint.X + dX, this.EndPoint.Y);
-
-                        paths.Add(DefineBezierSegment(this.StartPoint, this.MiddlePoint));
-                        paths.Add(DefineLineSegment(this.MiddlePoint, this.EndPoint));
-                    }
-                    else //Montée; output collée
-                    {
-                        this.StartPoint = InputNodeConnector.GetCenterPoint();
-                        this.EndPoint = OutputNodeConnector.GetCenterPoint();
-                        this.MiddlePoint = new BindingPoint(this.EndPoint.X - dX, this.StartPoint.Y);
-
-                        paths.Add(DefineLineSegment(this.StartPoint, this.MiddlePoint));
-                        paths.Add(DefineBezierSegment(this.MiddlePoint, this.EndPoint));
-                    }
-                }
+                // Horizontal line
+                paths.Add(DefineLineSegment(this.StartPoint, this.EndPoint));
             }
 
-            this.canvas.Children.Clear();
+            else if (_stepY == -1 && _stepX < -1)
+            {
+                // Vertical bezier
+                paths.Add(DefineVerticalBezierSegment(this.StartPoint, this.EndPoint));
+            }
+            else if (_stepY == -1 && _stepX == -1)
+            {
+                // Vertical bezier
+                paths.Add(DefineVerticalBezierSegment(this.StartPoint, this.EndPoint));
+            }
+            else if (_stepY == -1 && _stepX == 0)
+            {
+                // Vertical bezier
+                paths.Add(DefineVerticalBezierSegment(this.StartPoint, this.EndPoint));
+            }
+            else if (_stepY == -1 && _stepX == 1)
+            {
+                // Horizontal bezier
+                paths.Add(DefineHorizontalBezierSegment(this.StartPoint, this.EndPoint));
+            }
+            else if (_stepY == -1 && _stepX > 1)
+            {
+                // Horizontal line + Horizontal bezier
+                this.MiddlePoint = new BindingPoint(this.EndPoint.X - CalculateDx(_stepX), this.StartPoint.Y);
+                paths.Add(DefineLineSegment(this.StartPoint, this.MiddlePoint));
+                paths.Add(DefineHorizontalBezierSegment(this.MiddlePoint, this.EndPoint));
+            }
+
+            else if (_stepY == 1 && _stepX < -1)
+            {
+                // Vertical bezier
+                paths.Add(DefineVerticalBezierSegment(this.StartPoint, this.EndPoint));
+            }
+            else if (_stepY == 1 && _stepX == -1)
+            {
+                // Vertical bezier
+                paths.Add(DefineVerticalBezierSegment(this.StartPoint, this.EndPoint));
+            }
+            else if (_stepY == 1 && _stepX == 0)
+            {
+                // Vertical bezier
+                paths.Add(DefineVerticalBezierSegment(this.StartPoint, this.EndPoint));
+            }
+            else if (_stepY == 1 && _stepX == 1)
+            {
+                // Horizontal bezier
+                paths.Add(DefineHorizontalBezierSegment(this.StartPoint, this.EndPoint));
+            }
+            else if (_stepY == 1 && _stepX > 1)
+            {
+                // Horizontal line + Horizontal bezier
+                this.MiddlePoint = new BindingPoint(this.EndPoint.X - CalculateDx(_stepX), this.StartPoint.Y);
+                paths.Add(DefineLineSegment(this.StartPoint, this.MiddlePoint));
+                paths.Add(DefineHorizontalBezierSegment(this.MiddlePoint, this.EndPoint));
+            }
+
+            else if (_stepY < -1 && _stepX < -1)
+            {
+                // Vertical bezier + vertical line
+                this.MiddlePoint = new BindingPoint(this.StartPoint.X, this.EndPoint.Y - CalculateDy(_stepY));
+                paths.Add(DefineVerticalBezierSegment(this.StartPoint, this.MiddlePoint));
+                paths.Add(DefineLineSegment(this.MiddlePoint, this.EndPoint));
+            }
+            else if (_stepY < -1 && _stepX == -1)
+            {
+                // Vertical bezier + vertical line
+                this.MiddlePoint = new BindingPoint(this.StartPoint.X, this.EndPoint.Y - CalculateDy(_stepY));
+                paths.Add(DefineVerticalBezierSegment(this.StartPoint, this.MiddlePoint));
+                paths.Add(DefineLineSegment(this.MiddlePoint, this.EndPoint));
+            }
+            else if (_stepY < -1 && _stepX == 0)
+            {
+                // Vertical bezier + vertical line
+                this.MiddlePoint = new BindingPoint(this.StartPoint.X, this.EndPoint.Y - CalculateDy(_stepY));
+                paths.Add(DefineVerticalBezierSegment(this.StartPoint, this.MiddlePoint));
+                paths.Add(DefineLineSegment(this.MiddlePoint, this.EndPoint));
+            }
+            else if (_stepY < -1 && _stepX == 1)
+            {
+                // Horizontal bezier
+                paths.Add(DefineHorizontalBezierSegment(this.StartPoint, this.EndPoint));
+            }
+            else if (_stepY < -1 && _stepX > 1)
+            {
+                // Horizontal line + horizontal bezier
+                this.MiddlePoint = new BindingPoint(this.EndPoint.X - CalculateDx(_stepX), this.StartPoint.Y);
+                paths.Add(DefineLineSegment(this.StartPoint, this.MiddlePoint));
+                paths.Add(DefineHorizontalBezierSegment(this.MiddlePoint, this.EndPoint));
+            }
+
+            else if (_stepY > 1 && _stepX < -1)
+            {
+                // Vertical bezier + vertical line
+                this.MiddlePoint = new BindingPoint(this.StartPoint.X, this.EndPoint.Y + CalculateDy(_stepY));
+                paths.Add(DefineVerticalBezierSegment(this.StartPoint, this.MiddlePoint));
+                paths.Add(DefineLineSegment(this.MiddlePoint, this.EndPoint));
+            }
+            else if (_stepY > 1 && _stepX == -1)
+            {
+                // Vertical bezier + vertical line
+                this.MiddlePoint = new BindingPoint(this.StartPoint.X, this.EndPoint.Y + CalculateDy(_stepY));
+                paths.Add(DefineVerticalBezierSegment(this.StartPoint, this.MiddlePoint));
+                paths.Add(DefineLineSegment(this.MiddlePoint, this.EndPoint));
+            }
+            else if (_stepY > 1 && _stepX == 0)
+            {
+                // Vertical bezier + vertical line
+                this.MiddlePoint = new BindingPoint(this.StartPoint.X, this.EndPoint.Y + CalculateDy(_stepY));
+                paths.Add(DefineVerticalBezierSegment(this.StartPoint, this.MiddlePoint));
+                paths.Add(DefineLineSegment(this.MiddlePoint, this.EndPoint));
+            }
+            else if (_stepY > 1 && _stepX == 1)
+            {
+                //horizontal bezier
+                paths.Add(DefineHorizontalBezierSegment(this.StartPoint, this.EndPoint));
+            }
+            else if (_stepY > 1 && _stepX > 1)
+            {
+                // Horizontal line + horizontal bezier
+                this.MiddlePoint = new BindingPoint(this.EndPoint.X - CalculateDx(_stepX), this.StartPoint.Y);
+                paths.Add(DefineLineSegment(this.StartPoint, this.MiddlePoint));
+                paths.Add(DefineHorizontalBezierSegment(this.MiddlePoint, this.EndPoint));
+            }
+
+
+            this._canvas.Children.Clear();
             foreach (Path path in paths)
             {
-                //Stroke
-                var b = new Binding(nameof(Brush)) { Source = this, Mode = BindingMode.TwoWay };
-                BindingOperations.SetBinding(path, Path.StrokeProperty, b);
-
-                //Thickness
-                b = new Binding(nameof(Thickness)) { Source = this, Mode = BindingMode.TwoWay };
-                BindingOperations.SetBinding(path, Path.StrokeThicknessProperty, b);
-
-                this.UseLayoutRounding = true;
-                this.SnapsToDevicePixels = true;
-                this.canvas.Children.Add(path);
+                BindPathProperties(path);
+                this._canvas.Children.Add(path);
             }
         }
 
-        private Path DefineBezierSegment(BindingPoint startPoint, BindingPoint endPoint)
+        private void RefreshPoints()
+        {
+            var startPoint = InputNodeConnector.CenterPoint;
+            var endPoint = OutputNodeConnector.CenterPoint;
+
+            var elbowOffset = InputNodeItem.BaseNode.Radius / 2 * 1.25;
+
+            if (_stepY == 0 && _stepX < -1)
+            {
+                // Elbow + horizontal line + elbow
+                this.MiddlePoint.X = startPoint.X - elbowOffset;
+                this.MiddlePoint.Y = startPoint.Y - elbowOffset;
+                this.MiddlePoint2.X = endPoint.X + elbowOffset;
+                this.MiddlePoint2.Y = startPoint.Y - elbowOffset;
+                UpdateLinePoints(startPoint, endPoint);
+
+            }
+            else if (_stepY == 0 && _stepX == -1)
+            {
+                // Elbow + horizontal line + elbow
+                this.MiddlePoint.X = startPoint.X - elbowOffset;
+                this.MiddlePoint.Y = startPoint.Y - elbowOffset;
+                this.MiddlePoint2.X = endPoint.X + elbowOffset;
+                this.MiddlePoint2.Y = startPoint.Y - elbowOffset;
+                UpdateLinePoints(startPoint, endPoint);
+            }
+            else if (_stepY == 0 && _stepX == 0)
+            {
+                // Nothing
+            }
+            else if (_stepY == 0 && _stepX == 1)
+            {
+                // Horizontal line
+                UpdateLinePoints(startPoint, endPoint);
+            }
+            else if (_stepY == 0 && _stepX > 1)
+            {
+                // Horizontal line
+                UpdateLinePoints(startPoint, endPoint);
+            }
+            else if (_stepY == -1 && _stepX < -1)
+            {
+                // Vertical bezier
+                UpdateVerticalBezierPoints(startPoint, endPoint);
+            }
+            else if (_stepY == -1 && _stepX == -1)
+            {
+                // Vertical bezier
+                UpdateVerticalBezierPoints(startPoint, endPoint);
+            }
+            else if (_stepY == -1 && _stepX == 0)
+            {
+                // Vertical bezier
+                UpdateVerticalBezierPoints(startPoint, endPoint);
+            }
+            else if (_stepY == -1 && _stepX == 1)
+            {
+                // Horizontal bezier
+                UpdateHorizontalBezierPoints(startPoint, endPoint);
+            }
+            else if (_stepY == -1 && _stepX > 1)
+            {
+                // Horizontal line + Horizontal bezier
+                this.MiddlePoint.X = endPoint.X -+ CalculateDx(_stepX);
+                this.MiddlePoint.Y = startPoint.Y;
+                UpdateHorizontalBezierPoints(this.MiddlePoint, endPoint);
+            }
+            else if (_stepY == 1 && _stepX < -1)
+            {
+                // Vertical bezier
+                UpdateVerticalBezierPoints(startPoint, endPoint);
+            }
+            else if (_stepY == 1 && _stepX == -1)
+            {
+                // Vertical bezier
+                UpdateVerticalBezierPoints(startPoint, endPoint);
+            }
+            else if (_stepY == 1 && _stepX == 0)
+            {
+                // Vertical bezier
+                UpdateVerticalBezierPoints(startPoint, endPoint);
+            }
+            else if (_stepY == 1 && _stepX == 1)
+            {
+                // Horizontal bezier
+                UpdateHorizontalBezierPoints(startPoint, endPoint);
+            }
+            else if (_stepY == 1 && _stepX > 1)
+            {
+                // Horizontal line + Horizontal bezier
+                this.MiddlePoint.X = endPoint.X - CalculateDx(_stepX);
+                this.MiddlePoint.Y = startPoint.Y;
+                UpdateHorizontalBezierPoints(this.MiddlePoint, endPoint);
+            }
+            else if (_stepY < -1 && _stepX < -1)
+            {
+                // Vertical bezier + vertical line
+                this.MiddlePoint.X = endPoint.X;
+                this.MiddlePoint.Y = startPoint.Y - CalculateDy(_stepY);
+                UpdateVerticalBezierPoints(startPoint, this.MiddlePoint);
+            }
+            else if (_stepY < -1 && _stepX == -1)
+            {
+                // Vertical bezier + vertical line
+                this.MiddlePoint.X = endPoint.X;
+                this.MiddlePoint.Y = startPoint.Y - CalculateDy(_stepY);
+                UpdateVerticalBezierPoints(startPoint, this.MiddlePoint);
+            }
+            else if (_stepY < -1 && _stepX == 0)
+            {
+                // Vertical bezier + vertical line
+                this.MiddlePoint.X = endPoint.X;
+                this.MiddlePoint.Y = startPoint.Y - CalculateDy(_stepY);
+                UpdateVerticalBezierPoints(startPoint, this.MiddlePoint);
+            }
+            else if (_stepY < -1 && _stepX == 1)
+            {
+                // Horizontal bezier
+                UpdateHorizontalBezierPoints(startPoint, endPoint);
+            }
+            else if (_stepY < -1 && _stepX > 1)
+            {
+                // Horizontal line + horizontal bezier
+                this.MiddlePoint.X = endPoint.X - CalculateDx(_stepX);
+                this.MiddlePoint.Y = startPoint.Y;
+                UpdateHorizontalBezierPoints(this.MiddlePoint, endPoint);
+            }
+            else if (_stepY > 1 && _stepX < -1)
+            {
+                // Vertical bezier + vertical line
+                this.MiddlePoint.X = endPoint.X;
+                this.MiddlePoint.Y = startPoint.Y + CalculateDy(_stepY);
+                UpdateVerticalBezierPoints(startPoint, this.MiddlePoint);
+            }
+            else if (_stepY > 1 && _stepX == -1)
+            {
+                // Vertical bezier + vertical line
+                this.MiddlePoint.X = endPoint.X;
+                this.MiddlePoint.Y = startPoint.Y + CalculateDy(_stepY);
+                UpdateVerticalBezierPoints(startPoint, this.MiddlePoint);
+            }
+            else if (_stepY > 1 && _stepX == 0)
+            {
+                // Vertical bezier + vertical line
+                this.MiddlePoint.X = endPoint.X;
+                this.MiddlePoint.Y = startPoint.Y + CalculateDy(_stepY);
+                UpdateVerticalBezierPoints(startPoint, this.MiddlePoint);
+            }
+            else if (_stepY > 1 && _stepX == 1)
+            {
+                // Horizontal bezier
+                UpdateHorizontalBezierPoints(startPoint, endPoint);
+            }
+            else if (_stepY > 1 && _stepX > 1)
+            {
+                // Horizontal line + horizontal bezier
+                this.MiddlePoint.X = endPoint.X - CalculateDx(_stepX);
+                this.MiddlePoint.Y = startPoint.Y;
+                UpdateHorizontalBezierPoints(this.MiddlePoint, endPoint);
+            }
+        }
+
+
+
+
+
+
+        private double CalculateDx(int stepX)
+        {
+            double dX_connector = (InputNodeItem.OutputConnector.CenterPoint.X - InputNodeItem.InputConnector.CenterPoint.X) / 2;
+            double dX = OutputNodeConnector.CenterPoint.X - InputNodeConnector.CenterPoint.X;
+            dX -= (stepX - 1) * dX_connector;
+            dX /= stepX;
+            return dX;
+        }
+        private double CalculateDy(int stepY)
+        {
+            double dY = OutputNodeConnector.CenterPoint.Y - InputNodeConnector.CenterPoint.Y;
+            dY -= (stepY - 1);
+            dY /= stepY;
+            return dY;
+        }
+
+
+
+
+        private void UpdateHorizontalBezierPoints(BindingPoint startPoint, BindingPoint endPoint)
+        {
+            this.StartBezierPoint.X = endPoint.X;
+            this.StartBezierPoint.Y = startPoint.Y;
+            this.EndBezierPoint.X = startPoint.X;
+            this.EndBezierPoint.Y = endPoint.Y;
+        }
+
+        private void UpdateVerticalBezierPoints(BindingPoint startPoint, BindingPoint endPoint)
+        {            
+            this.StartBezierPoint.X = startPoint.X;
+            this.StartBezierPoint.Y = endPoint.Y;
+            this.EndBezierPoint.X = endPoint.X;
+            this.EndBezierPoint.Y = startPoint.Y;
+        }
+        private void UpdateLinePoints(BindingPoint startPoint, BindingPoint endPoint)
+        {
+            this.StartPoint.X = startPoint.X;
+            this.StartPoint.Y = startPoint.Y;
+            this.EndPoint.X = endPoint.X;
+            this.EndPoint.Y = endPoint.Y;
+        }
+
+
+        private Path DefineHorizontalBezierSegment(BindingPoint startPoint, BindingPoint endPoint)
         {
             this.StartBezierPoint = new BindingPoint(endPoint.X, startPoint.Y);
             this.EndBezierPoint = new BindingPoint(startPoint.X, endPoint.Y);
@@ -305,8 +598,79 @@ namespace PipeLine
 
             var pfColl = new PathFigureCollection { pFig };
 
-            return new Path() 
-            { 
+            return new Path()
+            {
+                Data = new PathGeometry(pfColl),
+                Stretch = System.Windows.Media.Stretch.None,
+                Style = null,
+            };
+        }
+        private Path DefineVerticalBezierSegment(BindingPoint startPoint, BindingPoint endPoint)
+        {
+            this.StartBezierPoint = new BindingPoint(startPoint.X, endPoint.Y);
+            this.EndBezierPoint = new BindingPoint(endPoint.X, startPoint.Y);
+
+            BezierSegment spline = new BezierSegment { IsStroked = true };
+
+            var b = new Binding("Point") { Source = StartBezierPoint, Mode = BindingMode.TwoWay };
+            BindingOperations.SetBinding(spline, BezierSegment.Point1Property, b);
+
+            b = new Binding("Point") { Source = EndBezierPoint, Mode = BindingMode.TwoWay };
+            BindingOperations.SetBinding(spline, BezierSegment.Point2Property, b);
+
+            b = new Binding("Point") { Source = endPoint, Mode = BindingMode.TwoWay };
+            BindingOperations.SetBinding(spline, BezierSegment.Point3Property, b);
+
+            var pColl = new PathSegmentCollection { spline };
+
+            var pFig = new PathFigure(startPoint.Point, pColl, false);
+
+            b = new Binding("Point") { Source = startPoint, Mode = BindingMode.TwoWay };
+            BindingOperations.SetBinding(pFig, PathFigure.StartPointProperty, b);
+
+            var pfColl = new PathFigureCollection { pFig };
+
+            return new Path()
+            {
+                Data = new PathGeometry(pfColl),
+                Stretch = System.Windows.Media.Stretch.None,
+                Style = null,
+            };
+        }
+        private Path DefineCurveSegment(BindingPoint startPoint, BindingPoint endPoint)
+        {
+            //Define SweepDirection according to the startpoint and endpoint
+            var stepX = endPoint.X - startPoint.X;
+            var stepY = endPoint.Y - startPoint.Y;
+
+            SweepDirection sweepDirection = stepX > 0 ? SweepDirection.Clockwise : SweepDirection.Counterclockwise;
+
+            double size = Math.Abs(endPoint.X - startPoint.X);
+
+            ArcSegment arc = new ArcSegment()
+            {
+                Point = endPoint.Point,
+                Size = new Size(size, size),
+                IsLargeArc = false,
+                IsStroked = true,
+                SweepDirection = sweepDirection,
+                RotationAngle = 0
+            };
+
+            var b = new Binding("Point") { Source = endPoint, Mode = BindingMode.TwoWay };
+            BindingOperations.SetBinding(arc, ArcSegment.PointProperty, b);
+
+            var pColl = new PathSegmentCollection { arc };
+
+            var pFig = new PathFigure(startPoint.Point, pColl, false);
+
+            b = new Binding("Point") { Source = startPoint, Mode = BindingMode.TwoWay };
+            BindingOperations.SetBinding(pFig, PathFigure.StartPointProperty, b);
+
+            var pfColl = new PathFigureCollection { pFig };
+
+            return new Path()
+            {
                 Data = new PathGeometry(pfColl),
                 Stretch = System.Windows.Media.Stretch.None,
                 Style = null,
@@ -328,13 +692,42 @@ namespace PipeLine
 
             var pfColl = new PathFigureCollection { pFig };
 
-            return new Path() 
-            { 
+            return new Path()
+            {
                 Data = new PathGeometry(pfColl),
                 Stretch = System.Windows.Media.Stretch.None,
                 Style = null,
             };
         }
+
+
+
+        private void BindPathProperties(Path path)
+        {
+            //Stroke
+            var b = new Binding(nameof(Brush)) { Source = this, Mode = BindingMode.TwoWay };
+            BindingOperations.SetBinding(path, Path.StrokeProperty, b);
+
+            //Thickness
+            b = new Binding(nameof(Thickness)) { Source = this, Mode = BindingMode.TwoWay };
+            BindingOperations.SetBinding(path, Path.StrokeThicknessProperty, b);
+
+            this.UseLayoutRounding = true;
+            this.SnapsToDevicePixels = true;
+        }
+        private void UpdateVisualState(bool value)
+        {
+            var color = ((SolidColorBrush)_baseBrush).Color;
+            SolidColorBrush semiTransparentBrush = new SolidColorBrush(color)
+            {
+                Opacity = 0.4
+            };
+            semiTransparentBrush.Freeze();
+
+            Brush = value ? _baseBrush : semiTransparentBrush;
+            Thickness = value ? _baseThickness : _baseThickness * 0.75;
+        }
+
 
 
 

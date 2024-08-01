@@ -25,8 +25,8 @@ namespace PipeLine
         private string pathData_circleFilled = "M24 44q-4.1 0-7.75-1.575-3.65-1.575-6.375-4.3-2.725-2.725-4.3-6.375Q4 28.1 4 24q0-4.15 1.575-7.8 1.575-3.65 4.3-6.35 2.725-2.7 6.375-4.275Q19.9 4 24 4q4.15 0 7.8 1.575 3.65 1.575 6.35 4.275 2.7 2.7 4.275 6.35Q44 19.85 44 24q0 4.1-1.575 7.75-1.575 3.65-4.275 6.375t-6.35 4.3Q28.15 44 24 44Z";
 
 
-        public PipeLine_NodeConnector inputConnector { get; set; }
-        public PipeLine_NodeConnector outputConnector { get; set; }
+        public PipeLine_NodeConnector InputConnector { get; set; }
+        public PipeLine_NodeConnector OutputConnector { get; set; }
         public Brush Brush { get; private set; }
 
         
@@ -84,18 +84,18 @@ namespace PipeLine
             };
 
             //Init Connectors
-            inputConnector = new PipeLine_NodeConnector();
-            outputConnector = new PipeLine_NodeConnector();
+            InputConnector = new PipeLine_NodeConnector();
+            OutputConnector = new PipeLine_NodeConnector();
 
             //Add elements to layout grid
-            layoutGrid.Children.Add(inputConnector);
+            layoutGrid.Children.Add(InputConnector);
             layoutGrid.Children.Add(coreBorder);
-            layoutGrid.Children.Add(outputConnector);
+            layoutGrid.Children.Add(OutputConnector);
 
             //Set position of elements
-            inputConnector.SetValue(Grid.ColumnProperty, 0);
+            InputConnector.SetValue(Grid.ColumnProperty, 0);
             coreBorder.SetValue(Grid.ColumnProperty, 1);
-            outputConnector.SetValue(Grid.ColumnProperty, 2);
+            OutputConnector.SetValue(Grid.ColumnProperty, 2);
 
             if (this.baseNode.Caption != null)
             {

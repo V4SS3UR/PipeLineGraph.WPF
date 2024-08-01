@@ -8,12 +8,9 @@ using System.Windows.Media;
 namespace PipeLine
 {
     public class PipeLine_NodeConnector : Border, INotifyPropertyChanged
-    {
-
-        private PipeLineGrid pipeLineGrid;
-        private PipeLine_NodeItem parentNode;    
-        private BindingPoint centerPoint;
-
+    {   
+        public BindingPoint CenterPoint { get; private set; }
+        private PipeLine_NodeItem _parentNode;
 
         private bool _isActive; public bool IsActive
         {
@@ -32,7 +29,7 @@ namespace PipeLine
             this.Height = 10;
             this.Width = 10;
             this.CornerRadius = new CornerRadius(5);
-            this.centerPoint = new BindingPoint(0, 0);
+            this.CenterPoint = new BindingPoint(0, 0);
 
             IsActive = false;
 
@@ -40,12 +37,8 @@ namespace PipeLine
             this.LayoutUpdated += OnLayoutUpdated;
         }
 
-        #region Methods
 
-        public BindingPoint GetCenterPoint()  //Retourne le point centrale
-        {
-            return centerPoint;
-        }
+        #region Methods
 
         private PipeLineGrid GetParentGraph()
         {
@@ -76,33 +69,50 @@ namespace PipeLine
             return parent as PipeLine_NodeItem;
         }
 
+        private void UpdateCenterPoint()
+        {
+            var parent = GetParentGraph();
+            if (parent == null)
+            {
+                return;
+            }
+
+            //Position relative sur le graph
+            Point relativeLocation = this.TransformToAncestor(parent).Transform(new Point(0, 0));
+
+            //Point centrale
+            Point center = new Point(relativeLocation.X + this.ActualWidth / 2, relativeLocation.Y + this.ActualHeight / 2);
+            CenterPoint.X = center.X;
+            CenterPoint.Y = center.Y;
+        }
+
         #endregion Methods
 
         #region Events
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            pipeLineGrid = GetParentGraph();
-            parentNode = GetParentNode();
-            this.Background = parentNode.Brush;
+            _parentNode = GetParentNode();
+            if (_parentNode != null)
+            {
+                this.Background = _parentNode.Brush;
+            }
+
+            UpdateCenterPoint();
         }
 
         private void OnLayoutUpdated(object sender, EventArgs e)
-        {
-            pipeLineGrid = GetParentGraph();
-            if (pipeLineGrid == null)
-            { 
-                return; 
+        {          
+            UpdateCenterPoint();
+
+            if(_parentNode == null)
+            {
+                _parentNode = GetParentNode();
+                if (_parentNode != null)
+                {
+                    this.Background = _parentNode.Brush;
+                }
             }
-
-            //Position relative sur le graph
-            Point relativeLocation = this.TransformToAncestor(pipeLineGrid).Transform(new Point(0, 0));
-
-            //Point centrale
-            Point center = new Point(relativeLocation.X + this.ActualWidth / 2, relativeLocation.Y + this.ActualHeight / 2);
-
-            centerPoint.X = center.X;
-            centerPoint.Y = center.Y;
         }
 
         #endregion Events

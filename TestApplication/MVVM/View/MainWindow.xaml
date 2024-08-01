@@ -60,18 +60,27 @@
                                         <ColumnDefinition Width="auto" SharedSizeGroup="C"/>
                                         <ColumnDefinition Width="auto" SharedSizeGroup="D"/>
                                         <ColumnDefinition Width="auto" SharedSizeGroup="E"/>
+                                        <ColumnDefinition Width="auto" SharedSizeGroup="F"/>
+                                        <ColumnDefinition Width="auto" SharedSizeGroup="G"/>
+                                        <ColumnDefinition Width="auto" SharedSizeGroup="H"/>
+                                        <ColumnDefinition Width="auto" SharedSizeGroup="I"/>
                                     </Grid.ColumnDefinitions>
 
                                     <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="Black" FontWeight="Medium" VerticalAlignment="Center"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding Row}" Foreground="Black" FontWeight="Normal"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding Column}" Foreground="Black" FontWeight="Normal"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Row}" Foreground="Black" FontWeight="Normal" VerticalAlignment="Center" Margin="1,0"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding Column}" Foreground="Black" FontWeight="Normal" VerticalAlignment="Center"/>
 
 
                                     <ComboBox Grid.Column="3" ItemsSource="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.NodeStates}" 
                                               SelectedItem="{Binding State}" Width="80"/>
 
                                     <Button Grid.Column="4" Background="Red" Content="Remove" Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.RemoveNodeCommand}"
-                                            CommandParameter="{Binding }" Width="70"/>
+                                            CommandParameter="{Binding }" Width="60"/>
+
+                                    <Button x:Name="UButton" Grid.Column="5" Background="SlateGray" Content="↑" Width="20" Margin="1,0" Click="UButton_Click"/>
+                                    <Button x:Name="DButton" Grid.Column="6" Background="SlateGray" Content="↓" Width="20" Margin="1,0" Click="DButton_Click"/>
+                                    <Button x:Name="LButton" Grid.Column="7" Background="SlateGray" Content="←" Width="20" Margin="1,0" Click="LButton_Click"/>
+                                    <Button x:Name="RButton" Grid.Column="8" Background="SlateGray" Content="→" Width="20" Margin="1,0" Click="RButton_Click"/>
                                 </Grid>
                             </Border>
                         </DataTemplate>
