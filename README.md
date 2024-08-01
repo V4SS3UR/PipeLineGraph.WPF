@@ -192,6 +192,10 @@ private void DynamicFlow()
     });
 }
 ```
+### Support complex graph and every direction
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/ebd2d252-e764-40e6-86e3-7f402112fbe0">
+</p>
 
 ## Contributing
 
