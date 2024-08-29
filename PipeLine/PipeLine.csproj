@@ -1,32 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0-windows;net461</TargetFrameworks>
+    <TargetFrameworks>net462;net47;net48;net5.0-windows;net6.0-windows</TargetFrameworks>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
+    <Version>$(AssemblyVersion)</Version>
     <UseWPF>true</UseWPF>
-    <SignAssembly>False</SignAssembly>
-    <Version>1.1.0.0</Version>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <AutoGenerateBindingRedirects>False</AutoGenerateBindingRedirects>
+    <PackageId>$(AssemblyName).WPF</PackageId>
+    <Title>$(AssemblyName).WPF</Title>
+    <Authors>V4SS3UR</Authors>
+    <Product>$(AssemblyName).WPF</Product>
+    <Description>PipeLine.WPF: A WPF-based graphical control for visualizing and managing pipelines, inspired by Jenkins BlueOcean. This project provides a customizable grid to represent nodes and segments, with features for adding, removing, and updating node states dynamically at runtime.</Description>
+    <Copyright>V4SS3UR</Copyright>
+    <PackageProjectUrl>https://github.com/V4SS3UR/PipeLine.WPF</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/V4SS3UR/PipeLine.WPF</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>wpf;xaml;csharp;pipeline;dotnet;jenkins;mvvm;blueocean</PackageTags>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-windows|AnyCPU'">
-    <DebugType>full</DebugType>
-    <Optimize>False</Optimize>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net461|AnyCPU'">
-    <DebugType>full</DebugType>
-    <Optimize>False</Optimize>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-windows|AnyCPU'">
-    <DebugType>full</DebugType>
-    <Optimize>False</Optimize>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
-    <DebugType>full</DebugType>
-    <Optimize>False</Optimize>
-  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>

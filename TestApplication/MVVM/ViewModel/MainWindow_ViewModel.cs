@@ -184,9 +184,9 @@ namespace TestApplication.MVVM.ViewModel
             Nodes.Clear();
 
             Node step1Node = Node.Create("Step 1", "Step 1", 1, 0, 50, Brushes.LightGray, NodeState.Default);
-            Node step1aNode = Node.Create("Step 1a", "Step 1a", 0, 2, 50, Brushes.LightGray, NodeState.Default);
-            Node step1bNode = Node.Create("Step 1b", "Step 1b", 1, 2, 50, Brushes.LightGray, NodeState.Default);
-            Node step1cNode = Node.Create("Step 1c", "Step 1c", 2, 2, 50, Brushes.LightGray, NodeState.Default);
+            Node step1aNode = Node.Create("Step 1a", "Step 1a", 0, 1, 50, Brushes.LightGray, NodeState.Default);
+            Node step1bNode = Node.Create("Step 1b", "Step 1b", 1, 1, 50, Brushes.LightGray, NodeState.Default);
+            Node step1cNode = Node.Create("Step 1c", "Step 1c", 2, 1, 50, Brushes.LightGray, NodeState.Default);
             step1Node.AddNextNode(step1aNode);
             step1Node.AddNextNode(step1bNode);
             step1Node.AddNextNode(step1cNode);
@@ -202,6 +202,7 @@ namespace TestApplication.MVVM.ViewModel
             Node step2dNode = Node.Create("Step 2d", "Step 2d", 2, 3, 50, Brushes.LightGray, NodeState.Default);
             step2aNode.AddNextNode(step2Node);
             step2bNode.AddNextNode(step2Node);
+            step2bNode.AddNextNode(step1Node);
             step2cNode.AddNextNode(step2Node);
             step2Node.AddNextNode(step2aNode);
             step2Node.AddNextNode(step2bNode);
