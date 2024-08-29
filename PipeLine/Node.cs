@@ -1,5 +1,5 @@
-﻿using PipeLine.Core;
-using PipeLine.Core.WPF;
+﻿using PipeLineGraph.Core;
+using PipeLineGraph.Core.WPF;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,7 +9,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Xml.Linq;
 
-namespace PipeLine
+namespace PipeLineGraph
 {
     public class Node : ObservableObject
     {

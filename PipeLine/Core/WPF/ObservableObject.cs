@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace PipeLine.Core.WPF
+namespace PipeLineGraph.Core.WPF
 {
     public class ObservableObject : INotifyPropertyChanged
     {

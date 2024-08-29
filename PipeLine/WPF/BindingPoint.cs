@@ -1,7 +1,7 @@
-﻿using PipeLine.Core.WPF;
+﻿using PipeLineGraph.Core.WPF;
 using System.Windows;
 
-namespace PipeLine
+namespace PipeLineGraph
 {
     public class BindingPoint : ObservableObject
     {

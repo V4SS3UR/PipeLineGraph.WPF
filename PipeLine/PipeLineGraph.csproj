@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net462;net47;net48;net5.0-windows;net6.0-windows</TargetFrameworks>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>
     <Version>$(AssemblyVersion)</Version>
     <UseWPF>true</UseWPF>
@@ -11,10 +11,10 @@
     <Title>$(AssemblyName).WPF</Title>
     <Authors>V4SS3UR</Authors>
     <Product>$(AssemblyName).WPF</Product>
-    <Description>PipeLine.WPF: A WPF-based graphical control for visualizing and managing pipelines, inspired by Jenkins BlueOcean. This project provides a customizable grid to represent nodes and segments, with features for adding, removing, and updating node states dynamically at runtime.</Description>
+    <Description>PipeLineGraph.WPF: A WPF-based graphical control for visualizing and managing pipelines, inspired by Jenkins BlueOcean. This project provides a customizable grid to represent nodes and segments, with features for adding, removing, and updating node states dynamically at runtime.</Description>
     <Copyright>V4SS3UR</Copyright>
-    <PackageProjectUrl>https://github.com/V4SS3UR/PipeLine.WPF</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/V4SS3UR/PipeLine.WPF</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/V4SS3UR/PipeLineGraph.WPF</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/V4SS3UR/PipeLineGraph.WPF</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>wpf;xaml;csharp;pipeline;dotnet;jenkins;mvvm;blueocean</PackageTags>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>

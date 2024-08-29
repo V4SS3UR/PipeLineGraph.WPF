@@ -5,9 +5,9 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using PipeLine.Core;
+using PipeLineGraph.Core;
 
-namespace PipeLine
+namespace PipeLineGraph
 {
     public class PipeLine_NodeItem : Border
     {

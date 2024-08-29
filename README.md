@@ -1,6 +1,6 @@
-# PipeLine.WPF
+# PipeLineGraph.WPF
 
-**PipeLine.WPF** is a WPF-based graphical control for visualizing and managing pipelines, inspired by the Jenkins BlueOcean interface. This project provides a customizable grid to represent nodes and segments, allowing for dynamic updates and visual representation of process flows.
+**PipeLineGraph.WPF** is a WPF-based graphical control for visualizing and managing pipelines, inspired by the Jenkins BlueOcean interface. This project provides a customizable grid to represent nodes and segments, allowing for dynamic updates and visual representation of process flows.
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/c6affec8-1286-4d89-bb86-0da50db2b5e2" width="40%">
@@ -24,7 +24,7 @@
 
 ### 1. Installation
 
-To use `PipeLine.WPF` in your WPF application, include it manually into your WPF project.
+To use `PipeLineGraph.WPF` in your WPF application, include it manually into your WPF project.
 
 ### 2. Create the View
 
@@ -35,7 +35,7 @@ Define the view in XAML to use the `PipeLineGrid` control:
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:MVVM.View.MainWindow"
-        xmlns:pipeline="clr-namespace:PipeLine">
+        xmlns:pipeline="clr-namespace:PipeLineGraph">
 
     <Grid>
         <pipeline:PipeLineGrid NodeItemSource="{Binding Nodes}" />

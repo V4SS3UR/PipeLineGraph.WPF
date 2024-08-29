@@ -1,4 +1,4 @@
-﻿namespace PipeLine.Core
+﻿namespace PipeLineGraph.Core
 {
     public enum NodeState
     {

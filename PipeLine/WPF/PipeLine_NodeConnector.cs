@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace PipeLine
+namespace PipeLineGraph
 {
     public class PipeLine_NodeConnector : Border, INotifyPropertyChanged
     {   

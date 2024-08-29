@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace PipeLine.Core.Converter
+namespace PipeLineGraph.Core.Converter
 {
     public class EnumFlagConverter : IValueConverter
     {

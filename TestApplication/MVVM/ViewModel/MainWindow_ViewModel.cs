@@ -1,6 +1,6 @@
-﻿using PipeLine;
-using PipeLine.Core;
-using PipeLine.Core.WPF;
+﻿using PipeLineGraph;
+using PipeLineGraph.Core;
+using PipeLineGraph.Core.WPF;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;

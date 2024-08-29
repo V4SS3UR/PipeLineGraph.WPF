@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace PipeLine.Core
+namespace PipeLineGraph.Core
 {
     public class RelayCommand : ICommand
     {

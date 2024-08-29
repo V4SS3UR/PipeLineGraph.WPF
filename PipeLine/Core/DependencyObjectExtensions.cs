@@ -1,7 +1,7 @@
 ﻿using System.Windows.Media;
 using System.Windows;
 
-namespace PipeLine.Core
+namespace PipeLineGraph.Core
 {
     public static class DependencyObjectExtensions
     {

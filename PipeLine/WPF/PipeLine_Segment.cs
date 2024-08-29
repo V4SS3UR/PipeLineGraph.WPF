@@ -1,4 +1,4 @@
-﻿using PipeLine.Core;
+﻿using PipeLineGraph.Core;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,7 +10,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-namespace PipeLine
+namespace PipeLineGraph
 {
     public class PipeLine_Segment : Border, INotifyPropertyChanged
     {

@@ -113,9 +113,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PipeLine\PipeLine.csproj">
+    <ProjectReference Include="..\PipeLine\PipeLineGraph.csproj">
       <Project>{c67058fa-5d5c-470b-8fe0-7f6399592db0}</Project>
-      <Name>ToastManager</Name>
+      <Name>PipeLineGraph</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
