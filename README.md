@@ -24,7 +24,10 @@
 
 ### 1. Installation
 
-To use `PipeLineGraph.WPF` in your WPF application, include it manually into your WPF project.
+Install the [PipeLineGraph.WPF NuGet package](https://www.nuget.org/packages/PipeLineGraph.WPF/) :
+```
+Install-Package PipeLineGraph.WPF
+```
 
 ### 2. Create the View
 
